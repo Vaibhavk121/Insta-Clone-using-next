@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 
 function Register() {
+    const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -16,6 +17,16 @@ function Register() {
         e.preventDefault();
         setError('');
         
+        if (!username.trim()) {
+            setError('Username is required');
+            return;
+        }
+
+        if (username.length < 3) {
+            setError('Username must be at least 3 characters');
+            return;
+        }
+
         if (password !== confirmPassword) {
             setError('Passwords do not match');
             return;
@@ -34,7 +45,7 @@ function Register() {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ username, email, password })
             });
 
             const data = await res.json();
@@ -61,6 +72,17 @@ function Register() {
 
                 <div className="bg-white p-8 border border-gray-300 rounded-lg">
                     <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <input
+                                type="text"
+                                placeholder="Username"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                required
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+                        
                         <div>
                             <input
                                 type="email"

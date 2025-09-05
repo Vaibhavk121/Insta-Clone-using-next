@@ -34,7 +34,7 @@ export default function VideoCard({ video }: VideoCardProps) {
                     <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-yellow-500 rounded-full flex items-center justify-center">
                         <div className="w-6 h-6 bg-white rounded-full"></div>
                     </div>
-                    <span className="font-semibold text-sm">{video.title || 'user'}</span>
+                    <span className="font-semibold text-sm">{video.userEmail || 'Unknown User'}</span>
                 </div>
                 <button className="text-gray-600">
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -45,20 +45,37 @@ export default function VideoCard({ video }: VideoCardProps) {
 
             {/* Video/Image */}
             <div className="relative aspect-square bg-gray-100">
-                {video.videoUrl ? (
+                {video.videoUrl && !video.videoUrl.startsWith('blob:') ? (
                     <video 
                         className="w-full h-full object-cover"
                         controls
                         poster={video.thumbnailUrl}
+                        onError={(e) => {
+                            console.error('Video failed to load:', video.videoUrl);
+                            // Hide the video element on error
+                            (e.target as HTMLVideoElement).style.display = 'none';
+                        }}
                     >
                         <source src={video.videoUrl} type="video/mp4" />
                         Your browser does not support the video tag.
                     </video>
+                ) : video.thumbnailUrl ? (
+                    <img 
+                        src={video.thumbnailUrl} 
+                        alt={video.title}
+                        className="w-full h-full object-cover"
+                    />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                        <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 20 20">
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 flex-col">
+                        <svg className="w-16 h-16 mb-2" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
                         </svg>
+                        <p className="text-sm">Video unavailable</p>
+                        {video.videoUrl?.startsWith('blob:') && (
+                            <p className="text-xs mt-1 text-center px-4">
+                                This video uses a temporary URL and needs to be re-uploaded
+                            </p>
+                        )}
                     </div>
                 )}
             </div>
@@ -94,7 +111,7 @@ export default function VideoCard({ video }: VideoCardProps) {
                 {/* Caption */}
                 {video.description && (
                     <div className="mb-2">
-                        <span className="font-semibold text-sm mr-2">{video.title || 'user'}</span>
+                        <span className="font-semibold text-sm mr-2">{video.userEmail || 'Unknown User'}</span>
                         <span className="text-sm">{video.description}</span>
                     </div>
                 )}

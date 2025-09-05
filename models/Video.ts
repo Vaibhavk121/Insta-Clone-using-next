@@ -11,7 +11,7 @@ export interface IVideo {
     description: string;
     videoUrl: string;
     thumbnailUrl?: string;
-    userId?: string;
+    userEmail?: string;
     controls?: boolean;
     transformation?: {
         height: number;
@@ -39,7 +39,7 @@ const videoSchema = new Schema<IVideo>({
         type: String,
         required: false
     },
-    userId: {
+    userEmail: {
         type: String,
         required: false
     },

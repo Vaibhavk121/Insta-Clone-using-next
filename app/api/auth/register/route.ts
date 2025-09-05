@@ -4,26 +4,28 @@ import User from "@/models/User";
 
 export async function POST(request: NextRequest) {
     try {
-        const { email, password } = await request.json();
+        const { username, email, password } = await request.json();
 
-        if (!email || !password) {
+        if (!username || !email || !password) {
             return NextResponse.json(
-                { error: "Email and password are required" },
+                { error: "Username, email and password are required" },
                 { status: 400 }
             )
         }
         await connectToDatabase()
 
-        const existingUser = await User.findOne({ email })
+        const existingUser = await User.findOne({ 
+            $or: [{ email }, { username }] 
+        });
 
         if (existingUser) {
             return NextResponse.json(
-                { error: "User already exists" },
+                { error: existingUser.email === email ? "Email already exists" : "Username already exists" },
                 { status: 400 }
             )
         }
 
-        await User.create({ email, password })
+        await User.create({ username, email, password })
 
         return NextResponse.json(
             { message: "User created successfully" },

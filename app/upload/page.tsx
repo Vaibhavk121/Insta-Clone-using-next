@@ -5,11 +5,14 @@ import { useSession } from 'next-auth/react';
 import { apiClient } from '@/lib/api-client';
 import Header from '../components/Header';
 import BottomNav from '../components/BottomNav';
+import FileUpload from '../components/FileUpload';
+import { IKUploadResponse } from 'imagekitio-next/dist/types/components/IKUpload/props';
 
 export default function Upload() {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [videoFile, setVideoFile] = useState<File | null>(null);
+    const [uploadedVideo, setUploadedVideo] = useState<IKUploadResponse | null>(null);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     
@@ -21,23 +24,26 @@ export default function Upload() {
         return null;
     }
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            if (file.type.startsWith('video/')) {
-                setVideoFile(file);
-                setError('');
-            } else {
-                setError('Please select a video file');
-            }
-        }
+    const handleUploadSuccess = (response: IKUploadResponse) => {
+        console.log('Upload successful:', response);
+        setUploadedVideo(response);
+        setError('');
+    };
+
+    const handleUploadProgress = (progress: number) => {
+        setUploadProgress(progress);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        if (!videoFile) {
-            setError('Please select a video file');
+        if (!uploadedVideo) {
+            setError('Please upload a video file first');
+            return;
+        }
+
+        if (!title.trim()) {
+            setError('Please enter a title');
             return;
         }
 
@@ -45,20 +51,19 @@ export default function Upload() {
         setError('');
 
         try {
-            // In a real app, you'd upload the file to a service like ImageKit or AWS S3
-            // For now, we'll create a mock video entry
             const videoData = {
-                title,
-                description,
-                videoUrl: URL.createObjectURL(videoFile), // This is just for demo
-                thumbnailUrl: '',
+                title: title.trim(),
+                description: description.trim(),
+                videoUrl: uploadedVideo.url,
+                thumbnailUrl: uploadedVideo.thumbnailUrl || '',
                 userId: session.user?.id || '',
                 createdAt: new Date()
             };
 
             await apiClient.createVideo(videoData);
             router.push('/');
-        } catch {
+        } catch (err) {
+            console.error('Failed to create video:', err);
             setError('Failed to upload video. Please try again.');
         } finally {
             setLoading(false);
@@ -75,22 +80,33 @@ export default function Upload() {
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Select Video
+                                Upload Video
                             </label>
-                            <input
-                                type="file"
-                                accept="video/*"
-                                onChange={handleFileChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            <FileUpload
+                                fileType="video"
+                                onSuccess={handleUploadSuccess}
+                                onProgress={handleUploadProgress}
                             />
+                            {uploadProgress > 0 && uploadProgress < 100 && (
+                                <div className="mt-2">
+                                    <div className="bg-gray-200 rounded-full h-2">
+                                        <div 
+                                            className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                                            style={{ width: `${uploadProgress}%` }}
+                                        />
+                                    </div>
+                                    <p className="text-sm text-gray-600 mt-1">{uploadProgress}% uploaded</p>
+                                </div>
+                            )}
                         </div>
 
-                        {videoFile && (
+                        {uploadedVideo && (
                             <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
                                 <video
-                                    src={URL.createObjectURL(videoFile)}
+                                    src={uploadedVideo.url}
                                     controls
                                     className="w-full h-full object-cover"
+                                    poster={uploadedVideo.thumbnailUrl}
                                 />
                             </div>
                         )}
@@ -128,10 +144,10 @@ export default function Upload() {
 
                         <button
                             type="submit"
-                            disabled={loading || !videoFile}
+                            disabled={loading || !uploadedVideo}
                             className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? 'Uploading...' : 'Share'}
+                            {loading ? 'Creating Post...' : 'Share'}
                         </button>
                     </form>
                 </div>
