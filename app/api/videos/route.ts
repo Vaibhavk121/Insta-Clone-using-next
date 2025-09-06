@@ -13,7 +13,6 @@ export async function GET() {
         const videos = await Video.find({}).sort({ createdAt: -1 }).limit(20);
         console.log(`Found ${videos.length} videos in database`);
 
-        // If no videos exist, return some mock data for demonstration
         if (videos.length === 0) {
             console.log("No videos found, returning mock data");
             const mockVideos = [
@@ -35,7 +34,7 @@ export async function GET() {
                     thumbnailUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPFbhM_EmP1dZZfwNBcT3-3S0PC-HLXaJ_zg&s",
                     userId: "demo",
                     userEmail: "demo@example.com",
-                    createdAt: new Date(Date.now() - 86400000) // 1 day ago
+                    createdAt: new Date(Date.now() - 86400000)
                 }
             ];
             return NextResponse.json(mockVideos);
@@ -120,7 +119,6 @@ export async function DELETE(request: NextRequest) {
 
         await connectToDatabase();
 
-        // Find the video and check if the user owns it
         const video = await Video.findById(videoId);
 
         if (!video) {
@@ -130,7 +128,6 @@ export async function DELETE(request: NextRequest) {
             );
         }
 
-        // Check if the user owns this video
         if (video.userEmail !== session.user?.email) {
             return NextResponse.json(
                 { error: "You can only delete your own videos" },

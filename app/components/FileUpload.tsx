@@ -49,7 +49,7 @@ export default function Fileupload({
                 setError("Only video files are allowed");
                 return false;
             }
-            if (file.size > 1024 * 1024 * 100) { // 100MB limit
+            if (file.size > 1024 * 1024 * 100) {
                 setError("Video size should be less than 100MB");
                 return false;
             }
@@ -59,7 +59,7 @@ export default function Fileupload({
                 setError("Only JPEG, PNG and WebP images are allowed");
                 return false;
             }
-            if (file.size > 1024 * 1024 * 5) { // 5MB limit for images
+            if (file.size > 1024 * 1024 * 5) {
                 setError("Image size should be less than 5MB");
                 return false;
             }

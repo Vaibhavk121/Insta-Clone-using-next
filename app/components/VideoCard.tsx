@@ -20,7 +20,6 @@ export default function VideoCard({ video, onDelete }: VideoCardProps) {
         setLiked(!liked);
         setLikes(prev => liked ? prev - 1 : prev + 1);
 
-        // Add heart animation
         const button = document.activeElement as HTMLElement;
         if (button) {
             button.classList.add('heart-animation');
@@ -61,20 +60,11 @@ export default function VideoCard({ video, onDelete }: VideoCardProps) {
         }
     };
 
-    // Check if current user owns this video
     const isOwner = session?.user?.email === video.userEmail;
-
-    // Debug logging - remove this after testing
-    console.log('Debug delete ownership:', {
-        sessionUserEmail: session?.user?.email,
-        videoUserEmail: video.userEmail,
-        isOwner,
-        videoTitle: video.title
-    });
 
     return (
         <div className="bg-white border-b border-gray-200">
-            {/* Header */}
+
             <div className="flex items-center justify-between p-3">
                 <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-yellow-500 rounded-full flex items-center justify-center">
@@ -101,7 +91,7 @@ export default function VideoCard({ video, onDelete }: VideoCardProps) {
                 </div>
             </div>
 
-            {/* Video/Image */}
+
             <div className="relative aspect-square bg-gray-100">
                 {video.videoUrl && !video.videoUrl.startsWith('blob:') ? (
                     <video
@@ -110,7 +100,6 @@ export default function VideoCard({ video, onDelete }: VideoCardProps) {
                         poster={video.thumbnailUrl}
                         onError={(e) => {
                             console.error('Video failed to load:', video.videoUrl);
-                            // Hide the video element on error
                             (e.target as HTMLVideoElement).style.display = 'none';
                         }}
                     >
@@ -138,7 +127,7 @@ export default function VideoCard({ video, onDelete }: VideoCardProps) {
                 )}
             </div>
 
-            {/* Actions */}
+
             <div className="p-3">
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-4">
@@ -161,12 +150,12 @@ export default function VideoCard({ video, onDelete }: VideoCardProps) {
                     </button>
                 </div>
 
-                {/* Likes */}
+
                 <div className="mb-2">
                     <span className="font-semibold text-sm">{likes.toLocaleString()} likes</span>
                 </div>
 
-                {/* Caption */}
+
                 {video.description && (
                     <div className="mb-2">
                         <span className="font-semibold text-sm mr-2">{video.userEmail || 'Unknown User'}</span>
@@ -174,12 +163,11 @@ export default function VideoCard({ video, onDelete }: VideoCardProps) {
                     </div>
                 )}
 
-                {/* Comments */}
+
                 <div className="text-gray-500 text-sm mb-2">
                     View all comments
                 </div>
 
-                {/* Time */}
                 <div className="text-gray-400 text-xs uppercase">
                     {new Date(video.createdAt || Date.now()).toLocaleDateString()}
                 </div>
