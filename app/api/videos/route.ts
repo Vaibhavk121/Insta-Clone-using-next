@@ -96,3 +96,59 @@ export async function POST(request: NextRequest) {
         );
     }
 }
+
+export async function DELETE(request: NextRequest) {
+    try {
+        const session = await getServerSession(authOptions);
+
+        if (!session) {
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
+        const { searchParams } = new URL(request.url);
+        const videoId = searchParams.get('id');
+
+        if (!videoId) {
+            return NextResponse.json(
+                { error: "Video ID is required" },
+                { status: 400 }
+            );
+        }
+
+        await connectToDatabase();
+
+        // Find the video and check if the user owns it
+        const video = await Video.findById(videoId);
+
+        if (!video) {
+            return NextResponse.json(
+                { error: "Video not found" },
+                { status: 404 }
+            );
+        }
+
+        // Check if the user owns this video
+        if (video.userEmail !== session.user?.email) {
+            return NextResponse.json(
+                { error: "You can only delete your own videos" },
+                { status: 403 }
+            );
+        }
+
+        await Video.findByIdAndDelete(videoId);
+
+        return NextResponse.json(
+            { message: "Video deleted successfully" },
+            { status: 200 }
+        );
+    } catch (error) {
+        console.error("Error deleting video:", error);
+        return NextResponse.json(
+            { error: "Failed to delete video" },
+            { status: 500 }
+        );
+    }
+}

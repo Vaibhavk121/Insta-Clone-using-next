@@ -11,6 +11,7 @@ export interface IVideo {
     description: string;
     videoUrl: string;
     thumbnailUrl?: string;
+    userId?: string;
     userEmail?: string;
     controls?: boolean;
     transformation?: {
@@ -39,6 +40,10 @@ const videoSchema = new Schema<IVideo>({
         type: String,
         required: false
     },
+    userId: {
+        type: String,
+        required: false
+    },
     userEmail: {
         type: String,
         required: false
@@ -63,5 +68,5 @@ const videoSchema = new Schema<IVideo>({
         }
     }
 }, { timestamps: true })
-const Video=models.Video || model<IVideo>('Video',videoSchema)
+const Video = models.Video || model<IVideo>('Video', videoSchema)
 export default Video

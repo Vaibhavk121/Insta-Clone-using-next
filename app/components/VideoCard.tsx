@@ -1,21 +1,25 @@
 "use client";
 import { IVideo } from '@/models/Video';
-import { HeartIcon, ChatBubbleOvalLeftIcon, PaperAirplaneIcon, BookmarkIcon } from '@heroicons/react/24/outline';
+import { HeartIcon, ChatBubbleOvalLeftIcon, PaperAirplaneIcon, BookmarkIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 
 interface VideoCardProps {
     video: IVideo;
+    onDelete?: (videoId: string) => void;
 }
 
-export default function VideoCard({ video }: VideoCardProps) {
+export default function VideoCard({ video, onDelete }: VideoCardProps) {
+    const { data: session } = useSession();
     const [liked, setLiked] = useState(false);
     const [likes, setLikes] = useState(Math.floor(Math.random() * 1000) + 1);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const handleLike = () => {
         setLiked(!liked);
         setLikes(prev => liked ? prev - 1 : prev + 1);
-        
+
         // Add heart animation
         const button = document.activeElement as HTMLElement;
         if (button) {
@@ -25,6 +29,48 @@ export default function VideoCard({ video }: VideoCardProps) {
             }, 300);
         }
     };
+
+    const handleDelete = async () => {
+        if (!confirm('Are you sure you want to delete this video?')) {
+            return;
+        }
+
+        const videoId = video._id?.toString();
+        if (!videoId) {
+            alert('Unable to delete video: Invalid video ID');
+            return;
+        }
+
+        setIsDeleting(true);
+        try {
+            const response = await fetch(`/api/videos?id=${videoId}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                onDelete?.(videoId);
+            } else {
+                const error = await response.json();
+                alert(error.error || 'Failed to delete video');
+            }
+        } catch (error) {
+            console.error('Error deleting video:', error);
+            alert('Failed to delete video');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    // Check if current user owns this video
+    const isOwner = session?.user?.email === video.userEmail;
+
+    // Debug logging - remove this after testing
+    console.log('Debug delete ownership:', {
+        sessionUserEmail: session?.user?.email,
+        videoUserEmail: video.userEmail,
+        isOwner,
+        videoTitle: video.title
+    });
 
     return (
         <div className="bg-white border-b border-gray-200">
@@ -36,17 +82,29 @@ export default function VideoCard({ video }: VideoCardProps) {
                     </div>
                     <span className="font-semibold text-sm">{video.userEmail || 'Unknown User'}</span>
                 </div>
-                <button className="text-gray-600">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                    </svg>
-                </button>
+                <div className="flex items-center space-x-2">
+                    {isOwner && (
+                        <button
+                            onClick={handleDelete}
+                            disabled={isDeleting}
+                            className="text-red-600 hover:text-red-800 disabled:opacity-50 p-1"
+                            title="Delete video"
+                        >
+                            <TrashIcon className="w-5 h-5" />
+                        </button>
+                    )}
+                    <button className="text-gray-600">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             {/* Video/Image */}
             <div className="relative aspect-square bg-gray-100">
                 {video.videoUrl && !video.videoUrl.startsWith('blob:') ? (
-                    <video 
+                    <video
                         className="w-full h-full object-cover"
                         controls
                         poster={video.thumbnailUrl}
@@ -60,8 +118,8 @@ export default function VideoCard({ video }: VideoCardProps) {
                         Your browser does not support the video tag.
                     </video>
                 ) : video.thumbnailUrl ? (
-                    <img 
-                        src={video.thumbnailUrl} 
+                    <img
+                        src={video.thumbnailUrl}
                         alt={video.title}
                         className="w-full h-full object-cover"
                     />

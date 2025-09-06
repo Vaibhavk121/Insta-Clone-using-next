@@ -29,6 +29,10 @@ export default function Home() {
     fetchVideos();
   }, []);
 
+  const handleVideoDelete = (videoId: string) => {
+    setVideos(prevVideos => prevVideos.filter(video => video._id?.toString() !== videoId));
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -41,7 +45,11 @@ export default function Home() {
           ) : videos.length > 0 ? (
             <div className="space-y-0">
               {videos.map((video) => (
-                <VideoCard key={video._id?.toString() || Math.random().toString()} video={video} />
+                <VideoCard 
+                  key={video._id?.toString() || Math.random().toString()} 
+                  video={video} 
+                  onDelete={handleVideoDelete}
+                />
               ))}
             </div>
           ) : (
